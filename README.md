@@ -25,6 +25,20 @@ All powered by a conversational AI assistant that makes blockchain accessible fo
 
 ---
 
+## 🌐 Currently Supported Blockchains
+
+ChainPilot currently supports:
+
+- **Ethereum**
+- **Binance Smart Chain (BSC)**
+- **Arbitrum**
+- **Polygon**
+
+🛠️ *More chains coming soon — stay tuned!*
+
+
+---
+
 ## 🌟 Capabilities
 
 - **AI Chatbot**: Ask anything about crypto, DeFi, NFTs, or smart contracts
