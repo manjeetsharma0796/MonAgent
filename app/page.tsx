@@ -1,3 +1,4 @@
+"use client"
 // Keep AI backend awake by pinging every 20 minutes
 function useKeepAIBackendAwake() {
   useEffect(() => {
@@ -14,7 +15,6 @@ function useKeepAIBackendAwake() {
     return () => clearInterval(interval);
   }, []);
 }
-"use client"
 
 import { useState, useEffect } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"

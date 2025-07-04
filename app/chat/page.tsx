@@ -1,3 +1,4 @@
+"use client"
 // Keep AI backend awake by pinging every 20 minutes
 function useKeepAIBackendAwake() {
   useEffect(() => {
@@ -15,7 +16,6 @@ function useKeepAIBackendAwake() {
   }, []);
 }
 
-"use client"
 import { ConnectButton } from "@/components/ConnectButton";
 import { useAccount } from "wagmi";
 import { formatAddress } from "@/lib/utils";
@@ -131,37 +131,33 @@ export default function ChatPage() {
           if (data.user_id) {
             localStorage.setItem("user_id", data.user_id);
             setUserId(data.user_id);
+            sendInfoToAI();
           }
         });
     } else {
       setUserId(storedUserId);
+      sendInfoToAI()
     }
   }, []);
 
   // Send wallet address info to AI (not shown in frontend) when wallet connects
-  useEffect(() => {
-    if (walletConnected && address && userId) {
-      const sentKey = `wallet_message_sent_${address}`;
-      if (!localStorage.getItem(sentKey)) {
-        // Use an async IIFE to ensure fetch is awaited
-        (async () => {
-          try {
-            await fetch("https://balance-search-agent.onrender.com/query", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                input: `My wallet address is ${address}`,
-                user_id: userId,
-              }),
-            });
-            localStorage.setItem(sentKey, "1");
-          } catch (e) {
-            // Optionally handle error
-          }
-        })();
-      }
+  const sendInfoToAI = async () => {
+    try {
+      const sentKey = `wallet_message_sent_on_load_${address}`;
+      await fetch("https://balance-search-agent.onrender.com/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          input: `My wallet address is ${address}`,
+          user_id: userId,
+        }),
+      });
+      localStorage.setItem(sentKey, "1");
+    } catch (e) {
+      // Optionally handle error
+      console.error("Error sending wallet address to AI:", e);
     }
-  }, [walletConnected, address, userId]);
+  }
 
   // Also send wallet address info to AI on page load (navigation to /chat)
   useEffect(() => {
@@ -171,6 +167,7 @@ export default function ChatPage() {
       if (!localStorage.getItem(sentKey)) {
         (async () => {
           try {
+            console.log(`Sending wallet address ${address} to AI on page load...=============================`);
             await fetch("https://balance-search-agent.onrender.com/query", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
