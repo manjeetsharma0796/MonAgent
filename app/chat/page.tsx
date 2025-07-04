@@ -1,3 +1,19 @@
+// Keep AI backend awake by pinging every 20 minutes
+function useKeepAIBackendAwake() {
+  useEffect(() => {
+    const ping = () => {
+      fetch("https://balance-search-agent.onrender.com/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+    };
+    // Initial ping
+    ping();
+    // Set interval for every 20 minutes
+    const interval = setInterval(ping, 20 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+}
 
 "use client"
 import { ConnectButton } from "@/components/ConnectButton";
@@ -86,6 +102,7 @@ const aiResponses = [
 ]
 
 export default function ChatPage() {
+  useKeepAIBackendAwake();
   const { address, isConnected: walletConnected } = useAccount();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {

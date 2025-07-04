@@ -1,3 +1,19 @@
+// Keep AI backend awake by pinging every 20 minutes
+function useKeepAIBackendAwake() {
+  useEffect(() => {
+    const ping = () => {
+      fetch("https://balance-search-agent.onrender.com/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+    };
+    // Initial ping
+    ping();
+    // Set interval for every 20 minutes
+    const interval = setInterval(ping, 20 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+}
 "use client"
 
 import { useState, useEffect } from "react"
@@ -43,6 +59,7 @@ const staggerContainer = {
 }
 
 export default function LandingPage() {
+  useKeepAIBackendAwake();
   const [isVisible, setIsVisible] = useState(false)
   const { scrollY } = useScroll()
   const y1 = useTransform(scrollY, [0, 300], [0, 50])
