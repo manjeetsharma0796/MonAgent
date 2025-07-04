@@ -1,4 +1,9 @@
+
 "use client"
+import { ConnectButton } from "@/components/ConnectButton";
+import { useAccount } from "wagmi";
+import { formatAddress } from "@/lib/utils";
+
 
 import type React from "react"
 
@@ -81,6 +86,7 @@ const aiResponses = [
 ]
 
 export default function ChatPage() {
+  const { address, isConnected: walletConnected } = useAccount();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -88,46 +94,131 @@ export default function ChatPage() {
       text: "👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can help you swap tokens, send crypto, explain DeFi concepts, check gas fees, and much more. What would you like to know?",
       timestamp: new Date(),
     },
-  ])
-  const [inputMessage, setInputMessage] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
-  const [isConnected, setIsConnected] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  // Remove unused isConnected state
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // User ID initialization
+  useEffect(() => {
+    let storedUserId = localStorage.getItem("user_id");
+    if (!storedUserId) {
+      fetch("https://balance-search-agent.onrender.com/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user_id) {
+            localStorage.setItem("user_id", data.user_id);
+            setUserId(data.user_id);
+          }
+        });
+    } else {
+      setUserId(storedUserId);
+    }
+  }, []);
+
+  // Send wallet address info to AI (not shown in frontend) when wallet connects
+  useEffect(() => {
+    if (walletConnected && address && userId) {
+      const sentKey = `wallet_message_sent_${address}`;
+      if (!localStorage.getItem(sentKey)) {
+        // Use an async IIFE to ensure fetch is awaited
+        (async () => {
+          try {
+            await fetch("https://balance-search-agent.onrender.com/query", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                input: `My wallet address is ${address}`,
+                user_id: userId,
+              }),
+            });
+            localStorage.setItem(sentKey, "1");
+          } catch (e) {
+            // Optionally handle error
+          }
+        })();
+      }
+    }
+  }, [walletConnected, address, userId]);
+
+  // Also send wallet address info to AI on page load (navigation to /chat)
+  useEffect(() => {
+    // Only send if wallet is connected, address and userId exist, and not already sent
+    if (walletConnected && address && userId) {
+      const sentKey = `wallet_message_sent_on_load_${address}`;
+      if (!localStorage.getItem(sentKey)) {
+        (async () => {
+          try {
+            await fetch("https://balance-search-agent.onrender.com/query", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                input: `My wallet address is ${address}`,
+                user_id: userId,
+              }),
+            });
+            localStorage.setItem(sentKey, "1");
+          } catch (e) {
+            // Optionally handle error
+          }
+        })();
+      }
+    }
+  }, [walletConnected, address, userId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
+  // Send chat message to API
   const handleSendMessage = async (messageText?: string) => {
-    const textToSend = messageText || inputMessage
-    if (!textToSend.trim()) return
+    const textToSend = messageText || inputMessage;
+    if (!textToSend.trim() || !userId) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: "user",
       text: textToSend,
       timestamp: new Date(),
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInputMessage("")
-    setIsTyping(true)
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setIsTyping(true);
 
-    // Simulate AI response with realistic delay
-    setTimeout(
-      () => {
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+    try {
+      const res = await fetch("https://balance-search-agent.onrender.com/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: textToSend, user_id: userId }),
+      });
+      const data = await res.json();
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        text: data.output || "Sorry, I couldn't get a response.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
           type: "ai",
-          text: aiResponses[Math.floor(Math.random() * aiResponses.length)],
+          text: "Sorry, there was an error connecting to the AI service.",
           timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, aiMessage])
-        setIsTyping(false)
-      },
-      1500 + Math.random() * 1000,
-    )
-  }
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -249,16 +340,7 @@ export default function ChatPage() {
                 </motion.div>
               </Link>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  onClick={() => setIsConnected(!isConnected)}
-                  className={`${isConnected
-                      ? "bg-emerald-600 hover:bg-emerald-700"
-                      : "bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700"
-                    } rounded-full px-6`}
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  {isConnected ? "Connected" : "Connect Wallet"}
-                </Button>
+                <ConnectButton />
               </motion.div>
             </div>
           </div>
@@ -342,8 +424,8 @@ export default function ChatPage() {
                     {/* Avatar */}
                     <motion.div
                       className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${message.type === "user"
-                          ? "bg-gradient-to-r from-purple-600 to-emerald-600"
-                          : "bg-gradient-to-r from-gray-600 to-gray-700"
+                        ? "bg-gradient-to-r from-purple-600 to-emerald-600"
+                        : "bg-gradient-to-r from-gray-600 to-gray-700"
                         }`}
                       whileHover={{ scale: 1.1 }}
                     >
@@ -358,8 +440,8 @@ export default function ChatPage() {
                     <div className="flex-1">
                       <div
                         className={`px-6 py-4 rounded-3xl ${message.type === "user"
-                            ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
-                            : "bg-white/10 text-gray-200 border border-white/20"
+                          ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
+                          : "bg-white/10 text-gray-200 border border-white/20"
                           }`}
                       >
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
