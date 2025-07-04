@@ -85,7 +85,7 @@ export default function ChatPage() {
     {
       id: "welcome",
       type: "ai",
-      text: "👋 Welcome to Ledgerly! I'm your AI blockchain assistant. I can help you swap tokens, send crypto, explain DeFi concepts, check gas fees, and much more. What would you like to know?",
+      text: "👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can help you swap tokens, send crypto, explain DeFi concepts, check gas fees, and much more. What would you like to know?",
       timestamp: new Date(),
     },
   ])
@@ -223,7 +223,7 @@ export default function ChatPage() {
                     <Blocks className="w-6 h-6 text-white" />
                   </div>
                   <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Ledgerly
+                    ChainPilot
                   </span>
                 </motion.div>
               </Link>
@@ -251,11 +251,10 @@ export default function ChatPage() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   onClick={() => setIsConnected(!isConnected)}
-                  className={`${
-                    isConnected
+                  className={`${isConnected
                       ? "bg-emerald-600 hover:bg-emerald-700"
                       : "bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700"
-                  } rounded-full px-6`}
+                    } rounded-full px-6`}
                 >
                   <Wallet className="w-4 h-4 mr-2" />
                   {isConnected ? "Connected" : "Connect Wallet"}
@@ -312,7 +311,7 @@ export default function ChatPage() {
                 <span className="text-sm font-semibold text-white">Security Notice</span>
               </div>
               <p className="text-xs text-gray-300 leading-relaxed">
-                Always verify transaction details before confirming. Ledgerly never stores your private keys.
+                Always verify transaction details before confirming. ChainPilot never stores your private keys.
               </p>
             </div>
           </div>
@@ -337,17 +336,15 @@ export default function ChatPage() {
                   className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`flex items-start space-x-4 max-w-[80%] ${
-                      message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
-                    }`}
+                    className={`flex items-start space-x-4 max-w-[80%] ${message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
+                      }`}
                   >
                     {/* Avatar */}
                     <motion.div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        message.type === "user"
+                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${message.type === "user"
                           ? "bg-gradient-to-r from-purple-600 to-emerald-600"
                           : "bg-gradient-to-r from-gray-600 to-gray-700"
-                      }`}
+                        }`}
                       whileHover={{ scale: 1.1 }}
                     >
                       {message.type === "user" ? (
@@ -360,11 +357,10 @@ export default function ChatPage() {
                     {/* Message Content */}
                     <div className="flex-1">
                       <div
-                        className={`px-6 py-4 rounded-3xl ${
-                          message.type === "user"
+                        className={`px-6 py-4 rounded-3xl ${message.type === "user"
                             ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
                             : "bg-white/10 text-gray-200 border border-white/20"
-                        }`}
+                          }`}
                       >
                         <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                       </div>
@@ -492,7 +488,7 @@ export default function ChatPage() {
               </div>
 
               <p className="text-xs text-gray-500 mt-4 text-center">
-                Ledgerly AI can make mistakes. Please verify important information and never share private keys.
+                ChainPilot AI can make mistakes. Please verify important information and never share private keys.
               </p>
             </div>
           </motion.div>

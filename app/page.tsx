@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { ConnectButton } from "@/components/ConnectButton"
 import {
   Brain,
   RefreshCw,
@@ -120,6 +121,13 @@ export default function LandingPage() {
     },
   ]
 
+  // Ensure dark mode is applied by default
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
       {/* Enhanced Animated Background Elements */}
@@ -203,7 +211,7 @@ export default function LandingPage() {
               <Blocks className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Ledgerly
+              ChainPilot
             </span>
           </motion.div>
         </Link>
@@ -244,13 +252,15 @@ export default function LandingPage() {
             </motion.div>
           </Link>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
+            {/* <Button
               variant="outline"
               className="border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white bg-transparent backdrop-blur-sm"
             >
               <Wallet className="w-4 h-4 mr-2" />
               Connect Wallet
-            </Button>
+            </Button> */}
+            <ConnectButton />
+
           </motion.div>
         </div>
       </motion.nav>
@@ -542,11 +552,10 @@ export default function LandingPage() {
                       className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-md px-6 py-4 rounded-3xl text-lg ${
-                          message.type === "user"
-                            ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
-                            : "bg-white/10 text-gray-200 border border-white/20"
-                        }`}
+                        className={`max-w-md px-6 py-4 rounded-3xl text-lg ${message.type === "user"
+                          ? "bg-gradient-to-r from-purple-600 to-emerald-600 text-white"
+                          : "bg-white/10 text-gray-200 border border-white/20"
+                          }`}
                       >
                         {message.text}
                       </div>
@@ -704,11 +713,11 @@ export default function LandingPage() {
                     <Blocks className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Ledgerly
+                    ChainPilot
                   </span>
                 </motion.div>
               </Link>
-              <p className="text-gray-400 mb-8 max-w-md text-lg leading-relaxed">
+              <p className="text-muted-foreground mb-8 max-w-md text-lg leading-relaxed">
                 Powered by AI + Web3. Built for curious minds who want to master blockchain technology with confidence
                 and ease.
               </p>
@@ -718,7 +727,7 @@ export default function LandingPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-gray-400 hover:text-white hover:bg-white/10 w-12 h-12 rounded-full"
+                      className="text-muted-foreground hover:text-foreground hover:bg-card w-12 h-12 rounded-full"
                     >
                       <Icon className="w-6 h-6" />
                     </Button>
@@ -728,7 +737,7 @@ export default function LandingPage() {
             </div>
             <div>
               <h4 className="text-white font-semibold mb-6 text-xl">Product</h4>
-              <ul className="space-y-4 text-gray-400">
+              <ul className="space-y-4 text-muted-foreground">
                 {[
                   { name: "Features", href: "#features" },
                   { name: "How It Works", href: "#how-it-works" },
@@ -736,7 +745,7 @@ export default function LandingPage() {
                   { name: "Documentation", href: "#" },
                 ].map((item) => (
                   <motion.li key={item.name} whileHover={{ x: 5 }}>
-                    <Link href={item.href} className="hover:text-white transition-colors text-lg">
+                    <Link href={item.href} className="hover:text-foreground transition-colors text-lg">
                       {item.name}
                     </Link>
                   </motion.li>
@@ -745,10 +754,10 @@ export default function LandingPage() {
             </div>
             <div>
               <h4 className="text-white font-semibold mb-6 text-xl">Company</h4>
-              <ul className="space-y-4 text-gray-400">
+              <ul className="space-y-4 text-muted-foreground">
                 {["Privacy Policy", "Terms of Service", "Support", "Contact"].map((item) => (
                   <motion.li key={item} whileHover={{ x: 5 }}>
-                    <a href="#" className="hover:text-white transition-colors text-lg">
+                    <a href="#" className="hover:text-foreground transition-colors text-lg">
                       {item}
                     </a>
                   </motion.li>
@@ -757,13 +766,13 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-12">
+          <div className="border-t border-border pt-12">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-gray-400 text-lg">© 2024 Ledgerly. All rights reserved.</p>
+              <p className="text-muted-foreground text-lg">© 2024 ChainPilot. All rights reserved.</p>
               <div className="flex items-center space-x-4 mt-6 md:mt-0">
                 <Input
                   placeholder="Enter your email for updates"
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400 w-80 text-lg py-3 rounded-2xl"
+                  className="bg-muted border-border text-foreground placeholder-muted-foreground w-80 text-lg py-3 rounded-2xl"
                 />
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button className="bg-gradient-to-r from-purple-600 to-emerald-600 hover:from-purple-700 hover:to-emerald-700 px-8 py-3 rounded-2xl text-lg">
