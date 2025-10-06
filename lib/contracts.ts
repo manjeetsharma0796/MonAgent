@@ -1,0 +1,6 @@
+import { CHAIN_TOKEN_ABI, CHAIN_TOKEN_ADDRESS } from "./chainTokenAbi"
+
+export const DAILY_CLAIM_CONTRACT = CHAIN_TOKEN_ADDRESS
+export const DAILY_CLAIM_ABI = CHAIN_TOKEN_ABI
+
+

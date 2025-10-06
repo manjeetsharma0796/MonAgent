@@ -34,6 +34,14 @@ ChainPilot currently supports:
 
 ---
 
+## 📄 Deployed Contract
+
+- **Contract Address (CT/ChainToken)**: `0x8F807631106cb8c070fb488dCe61affD67921cbf`
+- **Block Explorer (U2U Solaris Mainnet)**: [View on U2UScan](https://u2uscan.xyz/address/0x8F807631106cb8c070fb488dCe61affD67921cbf)
+
+
+---
+
 ## 🌟 Capabilities
 
 - **AI Chatbot**: Ask anything about crypto, DeFi, NFTs, or smart contracts

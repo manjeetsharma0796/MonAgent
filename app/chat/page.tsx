@@ -31,6 +31,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { DailyClaim } from "@/components/DailyClaim"
+import { createPublicClient, formatUnits, http } from "viem"
+import { u2uMainnet } from "@/lib/chains/u2u"
+import { CHAIN_TOKEN_ABI, CHAIN_TOKEN_ADDRESS } from "@/lib/chainTokenAbi"
 import {
   Bot,
   User,
@@ -206,6 +210,59 @@ export default function ChatPage() {
     setIsTyping(true);
 
     try {
+      // Intercept balance queries for CT token or U2U mainnet native balance
+      const lower = textToSend.toLowerCase()
+      const asksBalance = lower.includes("balance") || lower.includes("how much") || lower.includes("how many")
+      const mentionsCT = lower.includes(" ct ") || lower.includes(" ct?") || lower.includes("ct token") || lower.includes("chain token") || lower === "ct" || lower.endsWith(" ct")
+      const mentionsU2U = lower.includes("u2u") || lower.includes("u2u mainnet") || lower.includes("u2u sol")
+
+      const wantCTBalance = asksBalance && mentionsCT
+      const wantU2UNative = asksBalance && mentionsU2U
+
+      if ((wantCTBalance || wantU2UNative) && walletConnected && address) {
+        const client = createPublicClient({ chain: u2uMainnet, transport: http(u2uMainnet.rpcUrls.default.http[0]) })
+
+        if (wantCTBalance) {
+          try {
+            const [decimals, symbol, raw] = await Promise.all([
+              client.readContract({ abi: CHAIN_TOKEN_ABI as any, address: CHAIN_TOKEN_ADDRESS, functionName: "decimals" }),
+              client.readContract({ abi: CHAIN_TOKEN_ABI as any, address: CHAIN_TOKEN_ADDRESS, functionName: "symbol" }),
+              client.readContract({ abi: CHAIN_TOKEN_ABI as any, address: CHAIN_TOKEN_ADDRESS, functionName: "balanceOf", args: [address as `0x${string}`] }),
+            ])
+            const formatted = formatUnits(raw as bigint, Number(decimals))
+            const aiMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              type: "ai",
+              text: `Your CT balance on U2U Mainnet is ${formatted} ${symbol}.`,
+              timestamp: new Date(),
+            }
+            setMessages((prev) => [...prev, aiMessage])
+            setIsTyping(false)
+            return
+          } catch (err) {
+            // fall through to API response if on-chain read fails
+          }
+        }
+
+        if (wantU2UNative) {
+          try {
+            const raw = await client.getBalance({ address: address as `0x${string}` })
+            const formatted = formatUnits(raw, 18)
+            const aiMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              type: "ai",
+              text: `Your U2U native balance is ${formatted} U2U on U2U Mainnet.`,
+              timestamp: new Date(),
+            }
+            setMessages((prev) => [...prev, aiMessage])
+            setIsTyping(false)
+            return
+          } catch (err) {
+            // fall through to API response if on-chain read fails
+          }
+        }
+      }
+
       const res = await fetch("https://balance-search-agent.onrender.com/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -355,6 +412,9 @@ export default function ChatPage() {
               </Link>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <ConnectButton />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <DailyClaim />
               </motion.div>
             </div>
           </div>

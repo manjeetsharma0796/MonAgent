@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ConnectButton } from "@/components/ConnectButton"
+import { DailyClaim } from "@/components/DailyClaim"
 import {
   Brain,
   RefreshCw,
@@ -277,7 +278,9 @@ export default function LandingPage() {
               Connect Wallet
             </Button> */}
             <ConnectButton />
-
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <DailyClaim />
           </motion.div>
         </div>
       </motion.nav>
