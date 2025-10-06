@@ -3,7 +3,7 @@
 function useKeepAIBackendAwake() {
   useEffect(() => {
     const ping = () => {
-      fetch("https://balance-search-agent.onrender.com/start", {
+      fetch("https://balance-search-agent.onrender.com/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
