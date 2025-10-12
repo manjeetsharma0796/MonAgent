@@ -141,8 +141,28 @@ export default function ChatPage() {
 
       // Set initial welcome message based on wallet connection status
       const welcomeMessage = walletConnected && address
-        ? `👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(address)}. I can help you swap tokens, send crypto, check balances, explain DeFi concepts, and much more. What would you like to know?`
-        : "👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can help you swap tokens, send crypto, explain DeFi concepts, check gas fees, and much more. Connect your wallet to get personalized assistance with your specific wallet address. What would you like to know?";
+        ? `👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(address)}. 
+
+I can help you with:
+🔍 Real-time web search (crypto prices, news, market data)
+💰 Check wallet balances and transactions
+🔄 Swap tokens and manage DeFi protocols
+📚 Explain blockchain concepts and DeFi strategies
+⛽ Check gas fees and optimize transactions
+🔐 Secure wallet management and best practices
+
+What would you like to know?`
+        : `👋 Welcome to ChainPilot! I'm your AI blockchain assistant.
+
+I can help you with:
+🔍 Real-time web search (crypto prices, news, market data)
+💰 Check wallet balances and transactions
+🔄 Swap tokens and manage DeFi protocols
+📚 Explain blockchain concepts and DeFi strategies
+⛽ Check gas fees and optimize transactions
+🔐 Secure wallet management and best practices
+
+Connect your wallet to get personalized assistance with your specific wallet address. What would you like to know?`;
 
       setMessages([{
         id: "welcome",
