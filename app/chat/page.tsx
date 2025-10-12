@@ -30,6 +30,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { DailyClaim } from "@/components/DailyClaim"
+
 import {
   Bot,
   User,
@@ -408,6 +410,9 @@ export default function ChatPage() {
               </Link>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <ConnectButton />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <DailyClaim />
               </motion.div>
             </div>
           </div>

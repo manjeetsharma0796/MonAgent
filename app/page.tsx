@@ -25,6 +25,7 @@ import Link from "next/link"
 import { ConnectButton } from "@/components/ConnectButton"
 import { useAccount } from "wagmi"
 import { formatAddress } from "@/lib/utils"
+import { DailyClaim } from "@/components/DailyClaim"
 import {
   Brain,
   RefreshCw,
@@ -379,7 +380,9 @@ export default function LandingPage() {
               Connect Wallet
             </Button> */}
             <ConnectButton />
-
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <DailyClaim />
           </motion.div>
         </div>
       </motion.nav>
