@@ -31,6 +31,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { DailyClaim } from "@/components/DailyClaim"
+import { MarkdownRenderer } from "@/components/MarkdownRenderer"
+import { useToast } from "@/hooks/use-toast"
 
 import {
   Bot,
@@ -111,6 +113,7 @@ export default function ChatPage() {
   // Remove unused isConnected state
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // User ID initialization and welcome message setup
   useEffect(() => {
@@ -536,7 +539,14 @@ Connect your wallet to get personalized assistance with your specific wallet add
                           : "bg-white/10 text-gray-200 border border-white/20"
                           }`}
                       >
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                        {message.type === "ai" ? (
+                          <MarkdownRenderer
+                            content={message.text}
+                            className="text-sm leading-relaxed"
+                          />
+                        ) : (
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                        )}
                       </div>
 
                       {/* Message Actions */}
@@ -550,6 +560,14 @@ Connect your wallet to get personalized assistance with your specific wallet add
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               className="text-gray-500 hover:text-emerald-400 transition-colors"
+                              onClick={() => {
+                                navigator.clipboard.writeText(message.text);
+                                toast({
+                                  title: "Copied!",
+                                  description: "Message copied to clipboard",
+                                });
+                              }}
+                              title="Copy message"
                             >
                               <Copy className="w-4 h-4" />
                             </motion.button>
