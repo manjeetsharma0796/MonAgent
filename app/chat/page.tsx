@@ -3,9 +3,8 @@
 function useKeepAIBackendAwake() {
   useEffect(() => {
     const ping = () => {
-      fetch("https://balance-search-agent.onrender.com/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      fetch("/api/start", {
+        method: "GET",
       });
     };
     // Initial ping
@@ -104,86 +103,130 @@ const aiResponses = [
 export default function ChatPage() {
   useKeepAIBackendAwake();
   const { address, isConnected: walletConnected } = useAccount();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      type: "ai",
-      text: "👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can help you swap tokens, send crypto, explain DeFi concepts, check gas fees, and much more. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   // Remove unused isConnected state
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // User ID initialization
+  // User ID initialization and welcome message setup
   useEffect(() => {
-    let storedUserId = localStorage.getItem("user_id");
-    if (!storedUserId) {
-      fetch("https://balance-search-agent.onrender.com/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.user_id) {
-            localStorage.setItem("user_id", data.user_id);
-            setUserId(data.user_id);
-            sendInfoToAI();
+    const initializeUser = async () => {
+      let storedUserId = localStorage.getItem("user_id");
+      if (!storedUserId) {
+        // Get user_id from balance-search-agent /start endpoint
+        try {
+          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+
+          if (startResponse.ok) {
+            const startData = await startResponse.json();
+            storedUserId = startData.user_id;
+            if (storedUserId) {
+              localStorage.setItem("user_id", storedUserId);
+              setUserId(storedUserId);
+            }
           }
-        });
-    } else {
-      setUserId(storedUserId);
-      sendInfoToAI()
-    }
-  }, []);
+        } catch (error) {
+          console.error("Failed to get user_id from balance-search-agent:", error);
+        }
+      } else {
+        setUserId(storedUserId);
+      }
+
+      // Set initial welcome message based on wallet connection status
+      const welcomeMessage = walletConnected && address
+        ? `👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(address)}. I can help you swap tokens, send crypto, check balances, explain DeFi concepts, and much more. What would you like to know?`
+        : "👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can help you swap tokens, send crypto, explain DeFi concepts, check gas fees, and much more. Connect your wallet to get personalized assistance with your specific wallet address. What would you like to know?";
+
+      setMessages([{
+        id: "welcome",
+        type: "ai",
+        text: welcomeMessage,
+        timestamp: new Date(),
+      }]);
+    };
+
+    initializeUser();
+  }, [walletConnected, address]);
 
   // Send wallet address info to AI (not shown in frontend) when wallet connects
-  const sendInfoToAI = async () => {
+  const sendWalletInfoToAI = async (walletAddress: string) => {
     try {
-      const sentKey = `wallet_message_sent_on_load_${address}`;
-      await fetch("https://balance-search-agent.onrender.com/query", {
+      const sentKey = `wallet_info_sent_${walletAddress}`;
+      const alreadySent = localStorage.getItem(sentKey);
+
+      if (alreadySent) {
+        console.log("Wallet info already sent for this address");
+        return;
+      }
+
+      console.log(`Sending wallet address ${walletAddress} to AI...`);
+
+      // First ensure we have a user_id
+      let currentUserId = userId;
+      if (!currentUserId) {
+        // Get user_id from localStorage or create new one
+        currentUserId = localStorage.getItem("user_id");
+        if (!currentUserId) {
+          // Get user_id from balance-search-agent /start endpoint
+          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+
+          if (startResponse.ok) {
+            const startData = await startResponse.json();
+            currentUserId = startData.user_id;
+            if (currentUserId) {
+              localStorage.setItem("user_id", currentUserId);
+              setUserId(currentUserId);
+            }
+          } else {
+            console.error("Failed to get user_id from balance-search-agent");
+            return;
+          }
+        }
+      }
+
+      // Now send wallet info to balance-search-agent /query endpoint
+      const queryResponse = await fetch("https://balance-search-agent.onrender.com/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          input: `My wallet address is ${address}`,
-          user_id: userId,
+          user_id: currentUserId,
+          input: `My wallet address is ${walletAddress}`
         }),
       });
-      localStorage.setItem(sentKey, "1");
+
+      if (queryResponse.ok) {
+        const data = await queryResponse.json();
+        console.log("Wallet info sent successfully to balance-search-agent:", data);
+        localStorage.setItem(sentKey, "1");
+
+        // Update the welcome message to show wallet is connected
+        setMessages(prev => prev.map(msg =>
+          msg.id === "welcome"
+            ? { ...msg, text: `👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(walletAddress)}. I can help you swap tokens, send crypto, check balances, explain DeFi concepts, and much more. What would you like to know?` }
+            : msg
+        ));
+      } else {
+        console.error("Failed to send wallet info to balance-search-agent");
+      }
     } catch (e) {
-      // Optionally handle error
       console.error("Error sending wallet address to AI:", e);
     }
   }
 
-  // Also send wallet address info to AI on page load (navigation to /chat)
+  // Send wallet address info to AI when wallet connects
   useEffect(() => {
-    // Only send if wallet is connected, address and userId exist, and not already sent
-    if (walletConnected && address && userId) {
-      const sentKey = `wallet_message_sent_on_load_${address}`;
-      if (!localStorage.getItem(sentKey)) {
-        (async () => {
-          try {
-            console.log(`Sending wallet address ${address} to AI on page load...=============================`);
-            await fetch("https://balance-search-agent.onrender.com/query", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                input: `My wallet address is ${address}`,
-                user_id: userId,
-              }),
-            });
-            localStorage.setItem(sentKey, "1");
-          } catch (e) {
-            // Optionally handle error
-          }
-        })();
-      }
+    if (walletConnected && address) {
+      sendWalletInfoToAI(address);
     }
-  }, [walletConnected, address, userId]);
+  }, [walletConnected, address]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -206,10 +249,20 @@ export default function ChatPage() {
     setIsTyping(true);
 
     try {
-      const res = await fetch("https://balance-search-agent.onrender.com/query", {
+      // Prepare the input with wallet context if wallet is connected
+      let contextualInput = textToSend;
+      if (walletConnected && address) {
+        contextualInput = `[Wallet Context: My wallet address is ${address}] ${textToSend}`;
+      }
+
+      const res = await fetch("/api/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: textToSend, user_id: userId }),
+        body: JSON.stringify({
+          input: contextualInput,
+          chat_history: messages.map(m => ({ role: m.type === "user" ? "human" : "ai", content: m.text })),
+          user_id: userId
+        }),
       });
       const data = await res.json();
       const aiMessage: ChatMessage = {

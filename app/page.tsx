@@ -3,9 +3,8 @@
 function useKeepAIBackendAwake() {
   useEffect(() => {
     const ping = () => {
-      fetch("https://balance-search-agent.onrender.com/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      fetch("/api/start", {
+        method: "GET",
       });
     };
     // Initial ping
@@ -24,6 +23,8 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ConnectButton } from "@/components/ConnectButton"
+import { useAccount } from "wagmi"
+import { formatAddress } from "@/lib/utils"
 import {
   Brain,
   RefreshCw,
@@ -60,14 +61,115 @@ const staggerContainer = {
 
 export default function LandingPage() {
   useKeepAIBackendAwake();
+  const { address, isConnected: walletConnected } = useAccount();
   const [isVisible, setIsVisible] = useState(false)
   const { scrollY } = useScroll()
   const y1 = useTransform(scrollY, [0, 300], [0, 50])
   const y2 = useTransform(scrollY, [0, 300], [0, -50])
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  // User ID initialization
+  useEffect(() => {
+    const initializeUser = async () => {
+      let storedUserId = localStorage.getItem("user_id");
+      if (!storedUserId) {
+        // Get user_id from balance-search-agent /start endpoint
+        try {
+          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+
+          if (startResponse.ok) {
+            const startData = await startResponse.json();
+            storedUserId = startData.user_id;
+            if (storedUserId) {
+              localStorage.setItem("user_id", storedUserId);
+              setUserId(storedUserId);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to get user_id from balance-search-agent:", error);
+        }
+      } else {
+        setUserId(storedUserId);
+      }
+    };
+
+    initializeUser();
+  }, []);
+
+  // Send wallet address info to AI when wallet connects
+  const sendWalletInfoToAI = async (walletAddress: string) => {
+    try {
+      const sentKey = `wallet_info_sent_${walletAddress}`;
+      const alreadySent = localStorage.getItem(sentKey);
+
+      if (alreadySent) {
+        console.log("Wallet info already sent for this address");
+        return;
+      }
+
+      console.log(`Sending wallet address ${walletAddress} to AI from landing page...`);
+
+      // First ensure we have a user_id
+      let currentUserId = userId;
+      if (!currentUserId) {
+        // Get user_id from localStorage or create new one
+        currentUserId = localStorage.getItem("user_id");
+        if (!currentUserId) {
+          // Get user_id from balance-search-agent /start endpoint
+          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+
+          if (startResponse.ok) {
+            const startData = await startResponse.json();
+            currentUserId = startData.user_id;
+            if (currentUserId) {
+              localStorage.setItem("user_id", currentUserId);
+              setUserId(currentUserId);
+            }
+          } else {
+            console.error("Failed to get user_id from balance-search-agent");
+            return;
+          }
+        }
+      }
+
+      // Now send wallet info to balance-search-agent /query endpoint
+      const queryResponse = await fetch("https://balance-search-agent.onrender.com/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: currentUserId,
+          input: `My wallet address is ${walletAddress}`
+        }),
+      });
+
+      if (queryResponse.ok) {
+        const data = await queryResponse.json();
+        console.log("Wallet info sent successfully to balance-search-agent from landing page:", data);
+        localStorage.setItem(sentKey, "1");
+      } else {
+        console.error("Failed to send wallet info to balance-search-agent");
+      }
+    } catch (e) {
+      console.error("Error sending wallet address to AI from landing page:", e);
+    }
+  }
+
+  // Send wallet info to AI when wallet connects
+  useEffect(() => {
+    if (walletConnected && address) {
+      sendWalletInfoToAI(address);
+    }
+  }, [walletConnected, address]);
 
   const demoMessages = [
     { type: "user", text: "How do I swap ETH for USDC?" },
