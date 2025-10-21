@@ -389,13 +389,21 @@ export default function LandingPage() {
 
       {/* Enhanced Hero Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
+        {/* U2U integration tag (top-right, above the fold) */}
+        <div className="pointer-events-none">
+          <div className="absolute right-6 top-6 z-50 pointer-events-auto">
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm" style={{background: 'linear-gradient(90deg, rgba(124,58,237,0.18), rgba(14,165,233,0.12))', backdropFilter: 'blur(6px)'}}>
+              <span className="text-white text-[14px] leading-none">🌐 Integrated with U2U Mainnet</span>
+            </div>
+          </div>
+        </div>
         <motion.div initial="initial" animate="animate" variants={staggerContainer} className="text-center">
           <motion.div variants={fadeInUp} className="mb-8">
             <motion.div
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
             >
-              <Badge className="bg-gradient-to-r from-purple-500/20 to-emerald-500/20 text-purple-300 border-purple-500/30 mb-4 px-6 py-2 text-lg">
+              <Badge className="bg-gradient-to-r from-purple-500/20 to-emerald-500/20 text-purple-600 border-purple-500/30 mb-4 px-6 py-2 text-lg">
                 <Sparkles className="w-5 h-5 mr-2" />
                 Powered by AI + Web3
               </Badge>
@@ -890,7 +898,7 @@ export default function LandingPage() {
 
           <div className="border-t border-border pt-12">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-muted-foreground text-lg">© 2024 ChainPilot. All rights reserved.</p>
+              <p className="text-muted-foreground text-lg">© 2025 ChainPilot | Powered by AI + Web3 | 🌐 Integrated with U2U Mainnet</p>
               <div className="flex items-center space-x-4 mt-6 md:mt-0">
                 <Input
                   placeholder="Enter your email for updates"
