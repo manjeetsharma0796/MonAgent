@@ -39,7 +39,7 @@ async function callBalanceSearchAgent(userId: string, query: string): Promise<st
         console.log("QUERY=============", `userId: ${userId} \n`, `query: ${query}`)
 
         // Add system context to ensure AI knows its capabilities
-        const systemPrompt = `You are ChainPilot, an AI blockchain assistant. You have the following capabilities:
+        const systemPrompt = `You are MonAgent, an AI blockchain assistant. You have the following capabilities:
 - Web search for real-time information (prices, news, etc.)
 - Blockchain data queries (balances, transactions, gas fees)
 - DeFi protocol interactions

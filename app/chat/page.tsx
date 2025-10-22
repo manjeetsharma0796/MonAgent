@@ -144,7 +144,7 @@ export default function ChatPage() {
 
       // Set initial welcome message based on wallet connection status
       const welcomeMessage = walletConnected && address
-        ? `👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(address)}. 
+        ? `👋 Welcome to MonAgent! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(address)}. 
 
 I can help you with:
 🔍 Real-time web search (crypto prices, news, market data)
@@ -155,7 +155,7 @@ I can help you with:
 🔐 Secure wallet management and best practices
 
 What would you like to know?`
-        : `👋 Welcome to ChainPilot! I'm your AI blockchain assistant.
+        : `👋 Welcome to MonAgent! I'm your AI blockchain assistant.
 
 I can help you with:
 🔍 Real-time web search (crypto prices, news, market data)
@@ -235,7 +235,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
         // Update the welcome message to show wallet is connected
         setMessages(prev => prev.map(msg =>
           msg.id === "welcome"
-            ? { ...msg, text: `👋 Welcome to ChainPilot! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(walletAddress)}. I can help you swap tokens, send crypto, check balances, explain DeFi concepts, and much more. What would you like to know?` }
+            ? { ...msg, text: `👋 Welcome to MonAgent! I'm your AI blockchain assistant. I can see you're connected with wallet ${formatAddress(walletAddress)}. I can help you swap tokens, send crypto, check balances, explain DeFi concepts, and much more. What would you like to know?` }
             : msg
         ));
       } else {
@@ -406,7 +406,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
                     <Blocks className="w-6 h-6 text-white" />
                   </div>
                   <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    ChainPilot
+                    MonAgent
                   </span>
                 </motion.div>
               </Link>
@@ -488,7 +488,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
                 <span className="text-sm font-semibold text-white">Security Notice</span>
               </div>
               <p className="text-xs text-gray-300 leading-relaxed">
-                Always verify transaction details before confirming. ChainPilot never stores your private keys.
+                Always verify transaction details before confirming. MonAgent never stores your private keys.
               </p>
             </div>
           </div>
@@ -680,7 +680,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
               </div>
 
               <p className="text-xs text-gray-500 mt-4 text-center">
-                ChainPilot AI can make mistakes. Please verify important information and never share private keys.
+                MonAgent AI can make mistakes. Please verify important information and never share private keys.
               </p>
             </div>
           </motion.div>

@@ -1,10 +1,10 @@
-# ChainPilot 🚀
+# MonAgent 🚀
 
-Welcome to **ChainPilot** — your AI-powered blockchain copilot for the next generation of crypto users!
+Welcome to **MonAgent** — your AI-powered blockchain copilot for the next generation of crypto users!
 
-## What is ChainPilot?
+## What is MonAgent?
 
-ChainPilot is an intelligent, user-friendly web app that empowers anyone to:
+MonAgent is an intelligent, user-friendly web app that empowers anyone to:
 
 - 💬 **Chat with an AI agent** about blockchain, DeFi, and crypto topics
 - 🔄 **Swap tokens** across chains with simple, guided steps
@@ -21,10 +21,10 @@ All powered by a conversational AI assistant that makes blockchain accessible fo
 
 ## 🌐 Currently Supported Blockchains
 
-ChainPilot currently supports:
+MonAgent currently supports:
 
 - **Ethereum**
-- **U2U Mainnet**
+- **Monad Testnet**
 - **Binance Smart Chain (BSC)**
 - **Arbitrum**
 - **Polygon**
@@ -36,8 +36,8 @@ ChainPilot currently supports:
 
 ## 📄 Deployed Contract
 
-- **Contract Address (CT/ChainToken)**: `0x8F807631106cb8c070fb488dCe61affD67921cbf`
-- **Block Explorer (U2U Solaris Mainnet)**: [View on U2UScan](https://u2uscan.xyz/address/0x8F807631106cb8c070fb488dCe61affD67921cbf)
+- **Contract Address (CT/ChainToken)**: `0x7a085b49ecf10a36d15ade6d386fa032b2979045`
+- **Block Explorer (Monad Testnet)**: [View on Monad Testnet Explorer](https://monad-testnet.socialscan.io/address/0x7a085b49ecf10a36d15ade6d386fa032b2979045)
 
 
 ---
@@ -64,7 +64,7 @@ ChainPilot currently supports:
 
 ---
 
-**ChainPilot** is your trusted guide to the world of blockchain. Whether you're a beginner or a pro, let the AI and 🦊 MetaMask SDK make your crypto journey smarter, safer, and more fun!
+**MonAgent** is your trusted guide to the world of blockchain. Whether you're a beginner or a pro, let the AI and 🦊 MetaMask SDK make your crypto journey smarter, safer, and more fun!
 
 ---
 

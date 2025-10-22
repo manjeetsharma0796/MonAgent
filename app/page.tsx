@@ -331,7 +331,7 @@ export default function LandingPage() {
               <Blocks className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              ChainPilot
+              MonAgent
             </span>
           </motion.div>
         </Link>
@@ -389,11 +389,11 @@ export default function LandingPage() {
 
       {/* Enhanced Hero Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
-        {/* U2U integration tag (top-right, above the fold) */}
+        {/* Monad Testnet integration tag (top-right, above the fold) */}
         <div className="pointer-events-none">
           <div className="absolute right-6 top-6 z-50 pointer-events-auto">
-            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm" style={{background: 'linear-gradient(90deg, rgba(124,58,237,0.18), rgba(14,165,233,0.12))', backdropFilter: 'blur(6px)'}}>
-              <span className="text-white text-[14px] leading-none">🌐 Integrated with U2U Mainnet</span>
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm" style={{ background: 'linear-gradient(90deg, rgba(124,58,237,0.18), rgba(14,165,233,0.12))', backdropFilter: 'blur(6px)' }}>
+              <span className="text-white text-[14px] leading-none">🌐 Integrated with Monad Testnet</span>
             </div>
           </div>
         </div>
@@ -843,7 +843,7 @@ export default function LandingPage() {
                     <Blocks className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    ChainPilot
+                    MonAgent
                   </span>
                 </motion.div>
               </Link>
@@ -898,7 +898,7 @@ export default function LandingPage() {
 
           <div className="border-t border-border pt-12">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-muted-foreground text-lg">© 2025 ChainPilot | Powered by AI + Web3 | 🌐 Integrated with U2U Mainnet</p>
+              <p className="text-muted-foreground text-lg">© 2025 MonAgent | Powered by AI + Web3 | 🌐 Integrated with Monad Testnet</p>
               <div className="flex items-center space-x-4 mt-6 md:mt-0">
                 <Input
                   placeholder="Enter your email for updates"

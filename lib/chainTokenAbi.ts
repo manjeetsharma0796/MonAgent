@@ -1,4 +1,4 @@
-export const CHAIN_TOKEN_ADDRESS = "0x8F807631106cb8c070fb488dCe61affD67921cbf" as const;
+export const CHAIN_TOKEN_ADDRESS = "0x7a085b49ecf10a36d15ade6d386fa032b2979045" as const;
 
 export const CHAIN_TOKEN_ABI = [
     {
