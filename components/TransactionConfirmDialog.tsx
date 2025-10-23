@@ -20,10 +20,11 @@ type Props = {
     defaultRecipient: `0x${string}`;
     defaultAmount: string | number;
     onConfirm: (recipient: `0x${string}`, amount: string | number) => Promise<void> | void;
+    onSwitchAndConfirm?: (recipient: `0x${string}`, amount: string | number) => Promise<void> | void;
     loading?: boolean;
 };
 
-export function TransactionConfirmDialog({ open, onOpenChange, chainLabel, defaultRecipient, defaultAmount, onConfirm, loading }: Props) {
+export function TransactionConfirmDialog({ open, onOpenChange, chainLabel, defaultRecipient, defaultAmount, onConfirm, onSwitchAndConfirm, loading }: Props) {
     const [recipient, setRecipient] = useState<string>(defaultRecipient);
     const [amount, setAmount] = useState<string>(String(defaultAmount));
 
@@ -50,8 +51,13 @@ export function TransactionConfirmDialog({ open, onOpenChange, chainLabel, defau
                 </div>
                 <DialogFooter>
                     <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
+                    {onSwitchAndConfirm && (
+                        <Button variant="ghost" onClick={() => onSwitchAndConfirm(recipient as `0x${string}`, amount)} disabled={!valid || loading}>
+                            {loading ? "Processing..." : "Switch & Send"}
+                        </Button>
+                    )}
                     <Button onClick={() => onConfirm(recipient as `0x${string}`, amount)} disabled={!valid || loading}>
-                        {loading ? "Processing..." : "Confirm"}
+                        {loading ? "Processing..." : "Send on current network"}
                     </Button>
                 </DialogFooter>
             </DialogContent>

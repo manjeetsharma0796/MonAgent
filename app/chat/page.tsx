@@ -32,6 +32,8 @@ import Link from "next/link"
 import { DailyClaim } from "@/components/DailyClaim"
 import { MarkdownRenderer } from "@/components/MarkdownRenderer"
 import { useToast } from "@/hooks/use-toast"
+import { getChainIdByName } from "@/lib/utils/chainMapping";
+import { useSwitchChain } from "wagmi";
 import { TransactionConfirmDialog } from "@/components/TransactionConfirmDialog"
 import { useTransactionHandler } from "@/hooks/use-transaction-handler"
 import type { BackendResponseEnvelope } from "@/types/transaction"
@@ -117,9 +119,11 @@ export default function ChatPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const { handle: handleTx, loading: txLoading } = useTransactionHandler();
+  const { switchChainAsync } = useSwitchChain();
   const [txDialogOpen, setTxDialogOpen] = useState(false);
   const [pendingEnvelope, setPendingEnvelope] = useState<BackendResponseEnvelope | null>(null);
   const [pendingDefaults, setPendingDefaults] = useState<{ chainLabel: string; recipient: `0x${string}`; amount: string | number } | null>(null);
+  const [txInProgress, setTxInProgress] = useState(false);
 
   // User ID initialization and welcome message setup
   useEffect(() => {
@@ -357,10 +361,11 @@ Connect your wallet to get personalized assistance with your specific wallet add
         setPendingEnvelope(envelope);
         setPendingDefaults({ chainLabel, recipient, amount });
 
-        // Step 3: Automatically trigger the transaction (no dialog needed per your request)
-        setTimeout(() => {
-          confirmAndSendTx(recipient, amount);
-        }, 500); // slight delay to ensure UI updates
+        // Step 3: Open confirmation dialog so user explicitly confirms (prevents accidental double-sends)
+        // If you prefer automatic send, replace the next line with the commented setTimeout call.
+        setTxDialogOpen(true);
+        // To auto-send without dialog, use:
+        // setTimeout(() => { confirmAndSendTx(recipient, amount); }, 500);
       }
       else {
         // Unknown action type
@@ -390,6 +395,8 @@ Connect your wallet to get personalized assistance with your specific wallet add
 
   const confirmAndSendTx = async (recipient: `0x${string}`, amount: string | number) => {
     if (!pendingEnvelope || !pendingDefaults) return;
+    if (txInProgress) return; // prevent duplicate sends
+    setTxInProgress(true);
     setTxDialogOpen(false);
     toast({ title: "Sending transaction", description: `To ${formatAddress(recipient)} on ${pendingDefaults.chainLabel}` });
     const res = await handleTx(pendingEnvelope, { recipient, amount });
@@ -414,6 +421,52 @@ Connect your wallet to get personalized assistance with your specific wallet add
     }
     setPendingEnvelope(null);
     setPendingDefaults(null);
+    setTxInProgress(false);
+  }
+
+  // Called when user chooses to switch wallet network to the backend's target chain and then send
+  const handleSwitchAndSend = async (recipient: `0x${string}`, amount: string | number) => {
+    if (!pendingDefaults) return;
+    const backendChain = (pendingDefaults.chainLabel || "").toString();
+    // Try to map label back to a chain id; chainLabel is a friendly label, so prefer using the pendingEnvelope transaction.chain if available
+    let targetChainId: number | undefined;
+    try {
+      // If pendingEnvelope exists, try to parse the transaction.chain from it
+      if (pendingEnvelope) {
+        const parsed = JSON.parse(pendingEnvelope.output);
+        const transaction = (parsed as any).transaction;
+        if (transaction && transaction.chain) {
+          targetChainId = getChainIdByName(transaction.chain);
+        }
+      }
+    } catch (e) {
+      // noop
+    }
+
+    // Fallback: try to infer from the friendly label (lowercased)
+    if (!targetChainId) {
+      targetChainId = getChainIdByName(backendChain.replace(/ /g, "").toLowerCase());
+    }
+
+    if (!targetChainId) {
+      toast({ title: "Unable to determine target chain", description: `Can't resolve a chain id for ${backendChain}`, variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // Attempt to switch the wallet network
+      if (!switchChainAsync) {
+        toast({ title: "Switch not supported", description: "This wallet doesn't support programmatic network switching.", variant: 'destructive' });
+        return;
+      }
+      toast({ title: "Switching network", description: `Requesting wallet to switch to chain id ${targetChainId}...` });
+      await switchChainAsync({ chainId: targetChainId });
+      // After successful switch, call confirmAndSendTx which will send
+      await confirmAndSendTx(recipient, amount);
+    } catch (e: any) {
+      console.error('Network switch failed:', e);
+      toast({ title: 'Network switch failed', description: e?.message || String(e), variant: 'destructive' });
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -799,6 +852,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
           defaultRecipient={pendingDefaults.recipient}
           defaultAmount={pendingDefaults.amount}
           onConfirm={confirmAndSendTx}
+          onSwitchAndConfirm={handleSwitchAndSend}
           loading={txLoading}
         />
       )}
