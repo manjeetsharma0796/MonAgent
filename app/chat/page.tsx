@@ -268,91 +268,118 @@ Connect your wallet to get personalized assistance with your specific wallet add
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputMessage;
     if (!textToSend.trim() || !userId) return;
-
+  
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: "user",
       text: textToSend,
       timestamp: new Date(),
     };
-
+  
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
-
+  
     try {
-      // Send the user's input exactly as they typed it - no modifications
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
+      // Send user input exactly as typed
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://balance-search-agent.onrender.com"}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId,
-          input: textToSend, // Direct, unmodified user input
+          input: textToSend,
         }),
       });
-      const data = await res.json();
-      console.log("Backend response data:", data);
-
-      // Handle both response formats
-      let responseText = "";
-      let actionType = "chat";
-
-      if (data.answer) {
-        // New format: { "answer": "..." }
-        responseText = data.answer;
-        actionType = "chat";
-        console.log("Using answer format:", responseText);
-      } else if (data.output) {
-        // Existing format: { "output": "...", "action_type": "..." }
-        responseText = data.output;
-        actionType = data.action_type || "chat";
-        console.log("Using output format:", responseText);
-      } else {
-        // Fallback
-        responseText = "Sorry, I couldn't get a response.";
-        actionType = "chat";
-        console.log("Using fallback format:", responseText);
+  
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
-
-      if (actionType === "transaction") {
-        // Parse transaction details from output
-        let parsed: any = null;
-        try { parsed = JSON.parse(responseText); } catch { }
-
-        const chain = parsed?.chain as string | undefined;
-        const recipient = parsed?.recipient as `0x${string}` | undefined;
-        const amount = parsed?.amount as number | string | undefined;
-        if (chain && recipient && amount !== undefined) {
-          const chainLabelMap: Record<string, string> = {
-            bnb: "BNB Smart Chain",
-            bsc: "BNB Smart Chain", // alias for bnb
-            eth: "Ethereum",
-            matic: "Polygon",
-            "monad-testnet": "Monad Testnet",
-            u2u: "U2U Network",
-          };
-          const envelope: BackendResponseEnvelope = { output: responseText, action_type: actionType };
-          setPendingEnvelope(envelope);
-          setPendingDefaults({ chainLabel: chainLabelMap[chain] || chain, recipient, amount });
-          setTxDialogOpen(true);
+  
+      const data = await res.json();
+      console.log("Backend raw response:", data);
+  
+      // Parse the inner JSON string from `output`
+      let parsedOutput;
+      try {
+        parsedOutput = JSON.parse(data.output);
+      } catch (parseError) {
+        console.error("Failed to parse output JSON:", parseError);
+        throw new Error("Invalid response format from backend");
+      }
+  
+      const { action_type, message, transaction } = parsedOutput;
+  
+      if (action_type === "chat") {
+        // Display the AI message
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: "ai",
+          text: message || "Sorry, I couldn't generate a response.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+      } 
+      else if (action_type === "transaction") {
+        // Step 1: Show "Transaction Initiating..." message
+        const initiatingMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: "ai",
+          text: "🔄 Transaction initiating... Please confirm in your wallet.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, initiatingMessage]);
+  
+        // Step 2: Prepare transaction envelope in expected format
+        if (!transaction) {
+          toast({ title: "Error", description: "Missing transaction details.", variant: "destructive" });
           return;
         }
+  
+        const { recipient, amount, chain } = transaction;
+        const chainLabelMap: Record<string, string> = {
+          bnb: "BNB Smart Chain",
+          bsc: "BNB Smart Chain",
+          eth: "Ethereum",
+          matic: "Polygon",
+          "monad_testnet": "Monad Testnet",
+          "monad-testnet": "Monad Testnet", // handle both formats
+          u2u: "U2U Network",
+        };
+  
+        const chainLabel = chainLabelMap[chain] || chain;
+  
+        // Create envelope matching your expected type
+        const envelope: BackendResponseEnvelope = {
+          output: data.output, // original string
+          action_type: "transaction",
+        };
+  
+        setPendingEnvelope(envelope);
+        setPendingDefaults({ chainLabel, recipient, amount });
+  
+        // Step 3: Automatically trigger the transaction (no dialog needed per your request)
+        setTimeout(() => {
+          confirmAndSendTx(recipient, amount);
+        }, 500); // slight delay to ensure UI updates
+      } 
+      else {
+        // Unknown action type
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 2).toString(),
+          type: "ai",
+          text: "I received an unexpected response type. Please try again.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
       }
-
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        text: responseText,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
     } catch (err) {
+      console.error("Error in handleSendMessage:", err);
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 2).toString(),
+          id: (Date.now() + 3).toString(),
           type: "ai",
-          text: "Sorry, there was an error connecting to the AI service.",
+          text: "Sorry, there was an error processing your request. Please try again.",
           timestamp: new Date(),
         },
       ]);
