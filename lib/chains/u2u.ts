@@ -1,10 +1,9 @@
-import type { Chain } from "wagmi";
+import type { Chain } from "viem";
 
 // NOTE: U2U mainnet configuration
 export const u2u: Chain = {
     id: 39,
     name: "U2U Network",
-    network: "u2u",
     nativeCurrency: {
         name: "U2U",
         symbol: "U2U",

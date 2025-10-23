@@ -1,9 +1,8 @@
-import type { Chain } from "wagmi";
+import type { Chain } from "viem";
 
 export const polygon: Chain = {
     id: 137,
     name: "Polygon",
-    network: "polygon",
     nativeCurrency: {
         name: "MATIC",
         symbol: "MATIC",

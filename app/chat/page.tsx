@@ -268,18 +268,18 @@ Connect your wallet to get personalized assistance with your specific wallet add
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputMessage;
     if (!textToSend.trim() || !userId) return;
-  
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       type: "user",
       text: textToSend,
       timestamp: new Date(),
     };
-  
+
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsTyping(true);
-  
+
     try {
       // Send user input exactly as typed
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://balance-search-agent.onrender.com"}/query`, {
@@ -290,14 +290,14 @@ Connect your wallet to get personalized assistance with your specific wallet add
           input: textToSend,
         }),
       });
-  
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-  
+
       const data = await res.json();
       console.log("Backend raw response:", data);
-  
+
       // Parse the inner JSON string from `output`
       let parsedOutput;
       try {
@@ -306,9 +306,9 @@ Connect your wallet to get personalized assistance with your specific wallet add
         console.error("Failed to parse output JSON:", parseError);
         throw new Error("Invalid response format from backend");
       }
-  
+
       const { action_type, message, transaction } = parsedOutput;
-  
+
       if (action_type === "chat") {
         // Display the AI message
         const aiMessage: ChatMessage = {
@@ -318,7 +318,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, aiMessage]);
-      } 
+      }
       else if (action_type === "transaction") {
         // Step 1: Show "Transaction Initiating..." message
         const initiatingMessage: ChatMessage = {
@@ -328,13 +328,13 @@ Connect your wallet to get personalized assistance with your specific wallet add
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, initiatingMessage]);
-  
+
         // Step 2: Prepare transaction envelope in expected format
         if (!transaction) {
           toast({ title: "Error", description: "Missing transaction details.", variant: "destructive" });
           return;
         }
-  
+
         const { recipient, amount, chain } = transaction;
         const chainLabelMap: Record<string, string> = {
           bnb: "BNB Smart Chain",
@@ -345,23 +345,23 @@ Connect your wallet to get personalized assistance with your specific wallet add
           "monad-testnet": "Monad Testnet", // handle both formats
           u2u: "U2U Network",
         };
-  
+
         const chainLabel = chainLabelMap[chain] || chain;
-  
+
         // Create envelope matching your expected type
         const envelope: BackendResponseEnvelope = {
           output: data.output, // original string
           action_type: "transaction",
         };
-  
+
         setPendingEnvelope(envelope);
         setPendingDefaults({ chainLabel, recipient, amount });
-  
+
         // Step 3: Automatically trigger the transaction (no dialog needed per your request)
         setTimeout(() => {
           confirmAndSendTx(recipient, amount);
         }, 500); // slight delay to ensure UI updates
-      } 
+      }
       else {
         // Unknown action type
         const aiMessage: ChatMessage = {
@@ -403,7 +403,14 @@ Connect your wallet to get personalized assistance with your specific wallet add
         timestamp: new Date(),
       }]);
     } else {
-      toast({ title: "Transaction failed", description: (res as any).error?.message || "Please try again", });
+      const errorMsg = (res as any).errorMessage || (res as any).error?.message || (res as any).error?.shortMessage || "Please try again";
+      toast({ title: "Transaction failed", description: errorMsg, variant: "destructive" });
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 4).toString(),
+        type: "ai",
+        text: `❌ Transaction failed: ${errorMsg}`,
+        timestamp: new Date(),
+      }]);
     }
     setPendingEnvelope(null);
     setPendingDefaults(null);

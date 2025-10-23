@@ -1,9 +1,8 @@
-import type { Chain } from "wagmi";
+import type { Chain } from "viem";
 
 export const bnb: Chain = {
     id: 56,
     name: "BNB Smart Chain",
-    network: "bsc",
     nativeCurrency: {
         name: "BNB",
         symbol: "BNB",
