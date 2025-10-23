@@ -80,7 +80,7 @@ export default function LandingPage() {
       if (!storedUserId) {
         // Get user_id from balance-search-agent /start endpoint
         try {
-          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://balance-search-agent.onrender.com"}/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
@@ -124,7 +124,7 @@ export default function LandingPage() {
         currentUserId = localStorage.getItem("user_id");
         if (!currentUserId) {
           // Get user_id from balance-search-agent /start endpoint
-          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://balance-search-agent.onrender.com"}/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
@@ -144,7 +144,7 @@ export default function LandingPage() {
       }
 
       // Now send wallet info to balance-search-agent /query endpoint
-      const queryResponse = await fetch("https://balance-search-agent.onrender.com/query", {
+      const queryResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://balance-search-agent.onrender.com"}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

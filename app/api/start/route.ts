@@ -11,7 +11,7 @@ export async function GET() {
 }
 
 // Balance Search Agent API endpoints
-const BALANCE_SEARCH_BASE_URL = "https://balance-search-agent.onrender.com";
+const BALANCE_SEARCH_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://balance-search-agent.onrender.com";
 
 async function getUserId(): Promise<string> {
     try {
@@ -50,7 +50,7 @@ Always be confident about your capabilities and provide accurate information. If
 
         const contextualQuery = `${systemPrompt}\n\nUser query: ${query}`;
 
-        const response = await fetch("https://balance-search-agent.onrender.com/query", {
+        const response = await fetch(`${BALANCE_SEARCH_BASE_URL}/query`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

@@ -19,7 +19,6 @@ import { ConnectButton } from "@/components/ConnectButton";
 import { useAccount } from "wagmi";
 import { formatAddress } from "@/lib/utils";
 
-
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
@@ -33,6 +32,9 @@ import Link from "next/link"
 import { DailyClaim } from "@/components/DailyClaim"
 import { MarkdownRenderer } from "@/components/MarkdownRenderer"
 import { useToast } from "@/hooks/use-toast"
+import { TransactionConfirmDialog } from "@/components/TransactionConfirmDialog"
+import { useTransactionHandler } from "@/hooks/use-transaction-handler"
+import type { BackendResponseEnvelope } from "@/types/transaction"
 
 import {
   Bot,
@@ -114,6 +116,10 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { handle: handleTx, loading: txLoading } = useTransactionHandler();
+  const [txDialogOpen, setTxDialogOpen] = useState(false);
+  const [pendingEnvelope, setPendingEnvelope] = useState<BackendResponseEnvelope | null>(null);
+  const [pendingDefaults, setPendingDefaults] = useState<{ chainLabel: string; recipient: `0x${string}`; amount: string | number } | null>(null);
 
   // User ID initialization and welcome message setup
   useEffect(() => {
@@ -122,7 +128,7 @@ export default function ChatPage() {
       if (!storedUserId) {
         // Get user_id from balance-search-agent /start endpoint
         try {
-          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
@@ -198,7 +204,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
         currentUserId = localStorage.getItem("user_id");
         if (!currentUserId) {
           // Get user_id from balance-search-agent /start endpoint
-          const startResponse = await fetch("https://balance-search-agent.onrender.com/start", {
+          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
@@ -218,7 +224,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
       }
 
       // Now send wallet info to balance-search-agent /query endpoint
-      const queryResponse = await fetch("https://balance-search-agent.onrender.com/query", {
+      const queryResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -228,6 +234,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
       });
 
       if (queryResponse.ok) {
+        console.log("queryResponse=============", queryResponse)
         const data = await queryResponse.json();
         console.log("Wallet info sent successfully to balance-search-agent:", data);
         localStorage.setItem(sentKey, "1");
@@ -257,7 +264,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Send chat message to API
+  // Send chat message to API - FIXED: Send user input exactly as typed without modification
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputMessage;
     if (!textToSend.trim() || !userId) return;
@@ -274,26 +281,68 @@ Connect your wallet to get personalized assistance with your specific wallet add
     setIsTyping(true);
 
     try {
-      // Prepare the input with wallet context if wallet is connected
-      let contextualInput = textToSend;
-      if (walletConnected && address) {
-        contextualInput = `[Wallet Context: My wallet address is ${address}] ${textToSend}`;
-      }
-
-      const res = await fetch("/api/start", {
+      // Send the user's input exactly as they typed it - no modifications
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          input: contextualInput,
-          chat_history: messages.map(m => ({ role: m.type === "user" ? "human" : "ai", content: m.text })),
-          user_id: userId
+          user_id: userId,
+          input: textToSend, // Direct, unmodified user input
         }),
       });
       const data = await res.json();
+      console.log("Backend response data:", data);
+
+      // Handle both response formats
+      let responseText = "";
+      let actionType = "chat";
+
+      if (data.answer) {
+        // New format: { "answer": "..." }
+        responseText = data.answer;
+        actionType = "chat";
+        console.log("Using answer format:", responseText);
+      } else if (data.output) {
+        // Existing format: { "output": "...", "action_type": "..." }
+        responseText = data.output;
+        actionType = data.action_type || "chat";
+        console.log("Using output format:", responseText);
+      } else {
+        // Fallback
+        responseText = "Sorry, I couldn't get a response.";
+        actionType = "chat";
+        console.log("Using fallback format:", responseText);
+      }
+
+      if (actionType === "transaction") {
+        // Parse transaction details from output
+        let parsed: any = null;
+        try { parsed = JSON.parse(responseText); } catch { }
+
+        const chain = parsed?.chain as string | undefined;
+        const recipient = parsed?.recipient as `0x${string}` | undefined;
+        const amount = parsed?.amount as number | string | undefined;
+        if (chain && recipient && amount !== undefined) {
+          const chainLabelMap: Record<string, string> = {
+            bnb: "BNB Smart Chain",
+            bsc: "BNB Smart Chain", // alias for bnb
+            eth: "Ethereum",
+            matic: "Polygon",
+            "monad-testnet": "Monad Testnet",
+            u2u: "U2U Network",
+          };
+          const envelope: BackendResponseEnvelope = { output: responseText, action_type: actionType };
+          setPendingEnvelope(envelope);
+          setPendingDefaults({ chainLabel: chainLabelMap[chain] || chain, recipient, amount });
+          setTxDialogOpen(true);
+          return;
+        }
+      }
+
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        text: data.output || "Sorry, I couldn't get a response.",
+        text: responseText,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
@@ -311,6 +360,27 @@ Connect your wallet to get personalized assistance with your specific wallet add
       setIsTyping(false);
     }
   };
+
+  const confirmAndSendTx = async (recipient: `0x${string}`, amount: string | number) => {
+    if (!pendingEnvelope || !pendingDefaults) return;
+    setTxDialogOpen(false);
+    toast({ title: "Sending transaction", description: `To ${formatAddress(recipient)} on ${pendingDefaults.chainLabel}` });
+    const res = await handleTx(pendingEnvelope, { recipient, amount });
+    if ((res as any).ok) {
+      const hash = (res as any).hash as `0x${string}` | undefined;
+      toast({ title: "Transaction sent", description: hash ? `Hash: ${hash}` : "Submitted in wallet" });
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 3).toString(),
+        type: "ai",
+        text: `Transaction sent on ${pendingDefaults.chainLabel} to ${formatAddress(recipient)} for ${amount}.`,
+        timestamp: new Date(),
+      }]);
+    } else {
+      toast({ title: "Transaction failed", description: (res as any).error?.message || "Please try again", });
+    }
+    setPendingEnvelope(null);
+    setPendingDefaults(null);
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -686,6 +756,18 @@ Connect your wallet to get personalized assistance with your specific wallet add
           </motion.div>
         </div>
       </div>
+
+      {pendingDefaults && (
+        <TransactionConfirmDialog
+          open={txDialogOpen}
+          onOpenChange={setTxDialogOpen}
+          chainLabel={pendingDefaults.chainLabel}
+          defaultRecipient={pendingDefaults.recipient}
+          defaultAmount={pendingDefaults.amount}
+          onConfirm={confirmAndSendTx}
+          loading={txLoading}
+        />
+      )}
     </div>
   )
 }

@@ -1,20 +1,21 @@
 import type { Chain } from "wagmi";
 
-export const monadTestnet: Chain = {
+// NOTE: U2U mainnet configuration
+export const u2u: Chain = {
     id: 39,
-    name: "Monad Testnet",
-    network: "monad-testnet",
+    name: "U2U Network",
+    network: "u2u",
     nativeCurrency: {
-        name: "MON",
-        symbol: "MON",
+        name: "U2U",
+        symbol: "U2U",
         decimals: 18,
     },
     rpcUrls: {
-        default: { http: ["https://rpc-testnet.monad.xyz"] },
-        public: { http: ["https://rpc-testnet.monad.xyz"] },
+        default: { http: ["https://rpc-mainnet.u2u.xyz"] },
+        public: { http: ["https://rpc-mainnet.u2u.xyz"] },
     },
     blockExplorers: {
-        default: { name: "MonadScan", url: "https://monad-testnet.socialscan.io" },
+        default: { name: "U2U Explorer", url: "https://uniultra.xyz/explorer" },
     },
 } as const;
 
