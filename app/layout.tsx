@@ -8,7 +8,7 @@ import { mainnet, linea, lineaSepolia } from "wagmi/chains";
 import { monadTestnet } from "@/lib/chains/monad";
 import { bnb } from "@/lib/chains/bnb";
 import { polygon } from "@/lib/chains/polygon";
-import { u2u } from "@/lib/chains/u2u";
+import { u2u, u2uTestnet } from "@/lib/chains/u2u";
 import { metaMask } from "wagmi/connectors";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -19,13 +19,14 @@ const metadata: Metadata = {
 }
 // ✅ Create Wagmi config here
 const config = createConfig({
-  chains: [mainnet, bnb, polygon, u2u, linea, lineaSepolia, monadTestnet],
+  chains: [mainnet, bnb, polygon, u2u, u2uTestnet, linea, lineaSepolia, monadTestnet],
   connectors: [metaMask()],
   transports: {
     [mainnet.id]: http(),
     [bnb.id]: http("https://bsc-dataseed.binance.org"),
     [polygon.id]: http("https://polygon-rpc.com"),
-    [u2u.id]: http("https://rpc-mainnet.u2u.xyz"),
+  [u2u.id]: http("https://rpc-mainnet.u2u.xyz"),
+  [u2uTestnet.id]: http("https://rpc-nebulas-testnet.uniultra.xyz"),
     [linea.id]: http(),
     [lineaSepolia.id]: http(),
     [monadTestnet.id]: http("https://rpc-testnet.monad.xyz"),

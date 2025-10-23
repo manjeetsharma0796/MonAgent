@@ -4,16 +4,17 @@ import { mainnet } from "wagmi/chains";
 import { bnb } from "@/lib/chains/bnb";
 import { polygon } from "@/lib/chains/polygon";
 import { monadTestnet } from "@/lib/chains/monad";
-import { u2u } from "@/lib/chains/u2u";
+import { u2u, u2uTestnet } from "@/lib/chains/u2u";
 
-export type SupportedChainName = "eth" | "bnb" | "matic" | "monad-testnet" | "u2u";
+export type SupportedChainName = "eth" | "bnb" | "matic" | "monad-testnet" | "u2u" | "u2u-testnet";
 
 export const chainNameToId: Record<SupportedChainName, number> = {
     eth: mainnet.id,
     bnb: bnb.id,
     matic: polygon.id,
-    "monad-testnet": monadTestnet.id, // = 39
+    "monad-testnet": monadTestnet.id,
     u2u: u2u.id,
+    "u2u-testnet": u2uTestnet.id,
 };
 
 // Map backend or user-friendly chain names to canonical SupportedChainName
@@ -36,8 +37,11 @@ const chainAliases: Record<string, SupportedChainName> = {
 
     // U2U (if needed)
     "u2u network": "u2u",
-    "u2u_testnet": "u2u",
-    "u2u testnet": "u2u",
+    "u2u_testnet": "u2u-testnet",
+    "u2u testnet": "u2u-testnet",
+    "u2u-testnet": "u2u-testnet",
+    "u2umainnet": "u2u",
+    "u2u mainnet": "u2u",
 };
 
 /**
