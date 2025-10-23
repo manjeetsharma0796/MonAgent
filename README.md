@@ -36,7 +36,7 @@ MonAgent currently supports:
 
 ## 📄 Deployed Contract
 
-- **Contract Address (CT/ChainToken)**: `0x7a085b49ecf10a36d15ade6d386fa032b2979045`
+- **Contract Address (MT/MonToken)**: `0x7a085b49ecf10a36d15ade6d386fa032b2979045`
 - **Block Explorer (Monad Testnet)**: [View on Monad Testnet Explorer](https://monad-testnet.socialscan.io/address/0x7a085b49ecf10a36d15ade6d386fa032b2979045)
 
 

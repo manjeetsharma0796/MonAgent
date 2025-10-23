@@ -122,7 +122,7 @@ export default function ChatPage() {
   const { switchChainAsync } = useSwitchChain();
   const [txDialogOpen, setTxDialogOpen] = useState(false);
   const [pendingEnvelope, setPendingEnvelope] = useState<BackendResponseEnvelope | null>(null);
-  const [pendingDefaults, setPendingDefaults] = useState<{ chainLabel: string; recipient: `0x${string}`; amount: string | number } | null>(null);
+  const [pendingDefaults, setPendingDefaults] = useState<{ chainLabel: string; chainValue: string; recipient: `0x${string}`; amount: string | number } | null>(null);
   const [txInProgress, setTxInProgress] = useState(false);
 
   // User ID initialization and welcome message setup
@@ -132,7 +132,7 @@ export default function ChatPage() {
       if (!storedUserId) {
         // Get user_id from balance-search-agent /start endpoint
         try {
-          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/start`, {
+          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://mon-agent-jade.vercel.app"}/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
@@ -208,7 +208,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
         currentUserId = localStorage.getItem("user_id");
         if (!currentUserId) {
           // Get user_id from balance-search-agent /start endpoint
-          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/start`, {
+          const startResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://mon-agent-jade.vercel.app"}/start`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
@@ -228,7 +228,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
       }
 
       // Now send wallet info to balance-search-agent /query endpoint
-      const queryResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/query`, {
+      const queryResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://mon-agent-jade.vercel.app"}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -334,12 +334,14 @@ Connect your wallet to get personalized assistance with your specific wallet add
         setMessages((prev) => [...prev, initiatingMessage]);
 
         // Step 2: Prepare transaction envelope in expected format
-        if (!transaction) {
+        // Handle both nested and flat transaction structures
+        const transactionData = transaction || parsedOutput;
+        if (!transactionData.recipient || !transactionData.amount || !transactionData.chain) {
           toast({ title: "Error", description: "Missing transaction details.", variant: "destructive" });
           return;
         }
 
-        const { recipient, amount, chain } = transaction;
+        const { recipient, amount, chain } = transactionData;
         const chainLabelMap: Record<string, string> = {
           bnb: "BNB Smart Chain",
           bsc: "BNB Smart Chain",
@@ -359,7 +361,7 @@ Connect your wallet to get personalized assistance with your specific wallet add
         };
 
         setPendingEnvelope(envelope);
-        setPendingDefaults({ chainLabel, recipient, amount });
+        setPendingDefaults({ chainLabel, chainValue: chain, recipient, amount });
 
         // Step 3: Open confirmation dialog so user explicitly confirms (prevents accidental double-sends)
         // If you prefer automatic send, replace the next line with the commented setTimeout call.
@@ -441,6 +443,11 @@ Connect your wallet to get personalized assistance with your specific wallet add
       }
     } catch (e) {
       // noop
+    }
+
+    // Use the original chain value if available (most reliable)
+    if (!targetChainId && pendingDefaults.chainValue) {
+      targetChainId = getChainIdByName(pendingDefaults.chainValue);
     }
 
     // Fallback: try to infer from the friendly label (lowercased)
